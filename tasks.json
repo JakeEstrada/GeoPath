@@ -2,7 +2,7 @@
   "tasks": [
     {
       "task_name": "CPSC 352 - Cryptography",
-      "building_name": "Computer Science",
+      "building_name": "Nutwood Parking Structuree",
       "time_start": "19:00",
       "time_finish": "21:45",
       "priority": "HIGH"
@@ -16,14 +16,14 @@
     },
     {
       "task_name": "CPSC 481 - Artificial Intelligence",
-      "building_name": "Computer Science",
+      "building_name": "Eastside Parking Structure",
       "time_start": "13:00",
       "time_finish": "14:15",
       "priority": "HIGH"
     },
     {
       "task_name": "CPSC 483 - Introduction to Machine Learning",
-      "building_name": "Engineering South West",
+      "building_name": "Gordan Hall",
       "time_start": "15:30",
       "time_finish": "16:45",
       "priority": "MEDIUM"
@@ -58,14 +58,14 @@
     },
     {
       "task_name": "CPSC 323 - Compilers and Languages",
-      "building_name": "Computer Science",
+      "building_name": "Eastside Parking Structure",
       "time_start": "09:30",
       "time_finish": "10:45",
       "priority": "MEDIUM"
     },
     {
       "task_name": "CPSC 351 - Operating Systems Concepts",
-      "building_name": "Engineering South West",
+      "building_name": "Humanities & Social Sciences",
       "time_start": "18:00",
       "time_finish": "20:45",
       "priority": "HIGH"
@@ -86,7 +86,7 @@
     },
     {
       "task_name": "CPSC 349 - Web Front-End Engineering",
-      "building_name": "Computer Science",
+      "building_name": "Bookstore/ Titan Shops",
       "time_start": "11:00",
       "time_finish": "12:15",
       "priority": "MEDIUM"
@@ -100,7 +100,7 @@
     },
     {
       "task_name": "Group Project Meeting",
-      "building_name": "Titan Student Union",
+      "building_name": "Titan House",
       "time_start": "15:00",
       "time_finish": "17:00",
       "priority": "HIGH"
@@ -142,7 +142,7 @@
     },
     {
       "task_name": "CPSC 484 - Principles of Computer Graphics",
-      "building_name": "Visual Arts",
+      "building_name": "Ruby Gerontology Center",
       "time_start": "14:30",
       "time_finish": "15:45",
       "priority": "MEDIUM"
@@ -163,14 +163,14 @@
     },
     {
       "task_name": "Campus Club Meeting",
-      "building_name": "Titan Student Union",
+      "building_name": "Titan House",
       "time_start": "16:00",
       "time_finish": "18:00",
       "priority": "LOW"
     },
     {
       "task_name": "CPSC 449 - Web Back-End Engineering",
-      "building_name": "Computer Science",
+      "building_name": "Kinesiology & Health Science",
       "time_start": "15:00",
       "time_finish": "17:45",
       "priority": "HIGH"
@@ -184,14 +184,14 @@
     },
     {
       "task_name": "CPSC 411 - Mobile Device Application Programming",
-      "building_name": "McCarthy Hall",
+      "building_name": "Visual Arts",
       "time_start": "13:30",
       "time_finish": "14:45",
       "priority": "MEDIUM"
     },
     {
       "task_name": "Research Time",
-      "building_name": "Pollack Library",
+      "building_name": "Visual Arts",
       "time_start": "09:00",
       "time_finish": "11:00",
       "priority": "HIGH"
@@ -205,56 +205,56 @@
     },
     {
       "task_name": "CPSC 440 - Computer System Architecture",
-      "building_name": "Engineering North West",
+      "building_name": "State College Parking Structure",
       "time_start": "11:00",
       "time_finish": "12:15",
       "priority": "MEDIUM"
     },
     {
       "task_name": "CPSC 476 - Edge AI: Principles and Practices",
-      "building_name": "Computer Science",
+      "building_name": "Clayes Performing Arts Center",
       "time_start": "17:00",
       "time_finish": "19:45",
       "priority": "HIGH"
     },
     {
       "task_name": "Academic Advising Appointment",
-      "building_name": "Mihaylo Hall",
+      "building_name": "Carl's Jr.",
       "time_start": "13:00",
       "time_finish": "14:00",
       "priority": "HIGH"
     },
     {
       "task_name": "CPSC 464 - Software Architecture",
-      "building_name": "Engineering South West",
+      "building_name": "Clayes Performing Arts Center",
       "time_start": "09:30",
       "time_finish": "10:45",
       "priority": "MEDIUM"
     },
     {
       "task_name": "Job Fair Preparation",
-      "building_name": "Titan Student Union",
+      "building_name": "State College Parking Structure",
       "time_start": "11:30",
       "time_finish": "13:30",
       "priority": "HIGH"
     },
     {
       "task_name": "CPSC 491 - Senior Capstone Project",
-      "building_name": "Computer Science",
+      "building_name": "Ruby Gerontology Center",
       "time_start": "16:00",
       "time_finish": "18:45",
       "priority": "HIGH"
     },
     {
       "task_name": "CPSC 463 - Software Testing",
-      "building_name": "Engineering North West",
+      "building_name": "Student Recreation Center",
       "time_start": "14:00",
       "time_finish": "16:45",
       "priority": "MEDIUM"
     },
     {
       "task_name": "Study Group Session",
-      "building_name": "Pollack Library",
+      "building_name": "Portola Pavilion",
       "time_start": "18:00",
       "time_finish": "20:00",
       "priority": "MEDIUM"
@@ -282,14 +282,14 @@
     },
     {
       "task_name": "CPSC 439 - Theory of Computation",
-      "building_name": "McCarthy Hall",
+      "building_name": "University Police",
       "time_start": "08:00",
       "time_finish": "09:15",
       "priority": "HIGH"
     },
     {
       "task_name": "Career Center Workshop",
-      "building_name": "Titan Student Union",
+      "building_name": "Student Health and Counseling Center",
       "time_start": "14:30",
       "time_finish": "16:00",
       "priority": "MEDIUM"
@@ -303,7 +303,7 @@
     },
     {
       "task_name": "CPSC 431 - Database and Applications",
-      "building_name": "Computer Science",
+      "building_name": "Kinesiology & Health Science",
       "time_start": "15:30",
       "time_finish": "16:45",
       "priority": "MEDIUM"
@@ -319,7 +319,7 @@
       "task_name": "CPSC 466 - Software Process",
       "building_name": "Engineering South West",
       "time_start": "13:30",
-      "time_finish": "16:15", 
+      "time_finish": "16:15",
       "priority": "MEDIUM"
     },
     {
@@ -335,6 +335,20 @@
       "time_start": "11:30",
       "time_finish": "12:45",
       "priority": "MEDIUM"
+    },
+    {
+      "task_name": "Dance with the boys",
+      "building_name": "Gordan Hall",
+      "time_start": "09:30",
+      "time_finish": "11:15",
+      "priority": "HIGH"
+    },
+    {
+      "task_name": "Parking Lot Larp Match",
+      "building_name": "Nutwood Parking Structure",
+      "time_start": "16:00",
+      "time_finish": "18:45",
+      "priority": "HIGH"
     }
   ]
 }
