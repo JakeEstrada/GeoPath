@@ -13,6 +13,7 @@ import geopandas as gpd
 import pandas as pd
 from pyproj import Transformer
 import mplcursors
+from kmp import kmp_search, search_tasks_by_building
 
 # Set theme colors
 BG_COLOR = "#ffffff"
@@ -23,12 +24,10 @@ BUTTON_BG = "#4a90e2"
 BUTTON_FG = "#ffffff"
 HOVER_COLOR = "#357abd"
 
-# Configure ttk styles
 def configure_styles():
     style = ttk.Style()
-    style.theme_use('alt')  # Use clam theme as base
+    style.theme_use('alt')
     
-    # Configure main frame style
     style.configure('Main.TFrame', background=BG_COLOR)
     
     # Configure panel styles
@@ -67,6 +66,11 @@ with open('csuf_locations.json', 'r') as f:
 with open('tasks.json', 'r') as f:
     tasks_data = json.load(f)
     tasks_list = tasks_data['tasks']
+
+# Load weekly schedule
+with open('weekly_tasks.json', 'r') as f:
+    weekly_data = json.load(f)
+    weekly_schedule = weekly_data['weekly_schedule']
 
 # Function to calculate distance between two coordinates (using Haversine formula)
 def calculate_distance(lat1, lon1, lat2, lon2):
@@ -136,6 +140,17 @@ def tasks_overlap(task1, task2):
     
     # Check if task2 starts before task1 ends and task2 ends after task1 starts
     return (task2_start < task1_end) and (task2_end > task1_start)
+
+# Calculate travel time between buildings (in minutes)
+def calculate_travel_time(G, building1, building2):
+    try:
+        path = nx.shortest_path(G, source=building1, target=building2, weight='weight')
+        distance = sum(G[path[i]][path[i+1]]['weight'] for i in range(len(path)-1))
+        # Assuming average walking speed of 1.4 m/s (5 km/h)
+        travel_time_minutes = (distance / 1.4) / 60
+        return travel_time_minutes
+    except nx.NetworkXNoPath:
+        return float('inf')
 
 # Sort tasks by priority and resolve time conflicts
 def optimize_schedule(tasks):
@@ -289,7 +304,10 @@ class CSUFScheduleApp:
         # Initialize schedule and selected tasks
         self.schedule = []
         self.selected_tasks = []
-        
+        self.selected_building = None  # Track validated building
+        self.task_controls = []  # Track buttons and widgets related to tasks
+        self.selected_day = tk.StringVar(value="Monday")  # Default to Monday
+
         # Create GUI elements
         self.create_widgets()
     
@@ -297,39 +315,68 @@ class CSUFScheduleApp:
         # Create main frame
         main_frame = ttk.Frame(self.root, style='Main.TFrame', padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
-        
+
         # Create left panel for task selection
         left_panel = ttk.LabelFrame(main_frame, text="Task Selection", style='Panel.TLabelframe', padding="15")
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
         
-        # Create right panel for route display
-        right_panel = ttk.LabelFrame(main_frame, text="Route Visualization", style='Panel.TLabelframe', padding="15")
-        right_panel.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(10, 0))
+        # Add day selection
+        day_frame = ttk.Frame(left_panel, style='Main.TFrame')
+        day_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # Task selection elements
+        ttk.Label(day_frame, text="Select Day:", style='Header.TLabel').pack(side=tk.LEFT, padx=5)
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        day_combo = ttk.Combobox(day_frame, textvariable=self.selected_day, values=days, state="readonly", width=15)
+        day_combo.pack(side=tk.LEFT, padx=5)
+        day_combo.bind('<<ComboboxSelected>>', self.load_day_tasks)
+        
+        # Task selection combobox
         ttk.Label(left_panel, text="Select Task:", style='Header.TLabel').pack(anchor=tk.W, pady=(0, 5))
-        
-        # Create combobox for task selection
         self.task_combobox = ttk.Combobox(left_panel, width=50)
         self.task_combobox.pack(fill=tk.X, pady=(0, 15))
+        self.update_task_combobox()
+        self.task_controls.append(self.task_combobox)
+        
+        # Enable task combobox by default
+        self.task_combobox.configure(state='normal')
         
         # Populate combobox with task names
         self.update_task_combobox()
         
         # Buttons for task management
-        button_frame = ttk.Frame(left_panel)
+        button_frame = ttk.Frame(left_panel, style='Main.TFrame')
         button_frame.pack(fill=tk.X, pady=10)
         
-        ttk.Button(button_frame, text="Add Task", command=self.add_task, style='Action.TButton').pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Create New Task", command=self.create_new_task, style='Action.TButton').pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Remove Task", command=self.remove_task, style='Action.TButton').pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Clear All Tasks", command=self.clear_tasks, style='Action.TButton').pack(side=tk.LEFT, padx=5)
-        
+        add_button = ttk.Button(button_frame, text="Add Task", command=self.add_task, style='Action.TButton')
+        add_button.pack(side=tk.LEFT, padx=6)
+        self.task_controls.append(add_button)
+        create_button = ttk.Button(button_frame, text="Create New Task", command=self.create_new_task, style='Action.TButton')
+        create_button.pack(side=tk.LEFT, padx=6)
+        self.task_controls.append(create_button)
+        remove_button = ttk.Button(button_frame, text="Remove Task", command=self.remove_task, style='Action.TButton')
+        remove_button.pack(side=tk.LEFT, padx=6)
+        self.task_controls.append(remove_button)
+        clear_button = ttk.Button(button_frame, text="Clear All Tasks", command=self.clear_tasks, style='Action.TButton')
+        clear_button.pack(side=tk.LEFT, padx=6)
+        self.task_controls.append(clear_button)
+
+        # Search bar for buildings
+        ttk.Label(left_panel, text="Search Building:", style='Header.TLabel').pack(anchor=tk.W, pady=(10, 5))
+
+        search_frame = ttk.Frame(left_panel, style='Main.TFrame')
+        search_frame.pack(fill=tk.X, pady=(0, 10))
+
+        self.search_entry = ttk.Entry(search_frame, width=40)
+        self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        search_button = ttk.Button(search_frame, text="Search", command=self.perform_search, style='Action.TButton')
+        search_button.pack(side=tk.LEFT, padx=6)
+
         # Selected tasks listbox
         ttk.Label(left_panel, text="Selected Tasks:", style='Header.TLabel').pack(anchor=tk.W, pady=(15, 5))
         
         # Create a frame for the listbox with a border
-        listbox_frame = ttk.Frame(left_panel)
+        listbox_frame = ttk.Frame(left_panel, style='Main.TFrame')
         listbox_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
         
         self.selected_tasks_listbox = tk.Listbox(listbox_frame, 
@@ -343,16 +390,17 @@ class CSUFScheduleApp:
         self.selected_tasks_listbox.pack(fill=tk.BOTH, expand=True)
         
         # Schedule optimization and route finding
-        ttk.Button(left_panel, 
+        optimize_button = ttk.Button(left_panel, 
                   text="Optimize Schedule and Find Route",
                   command=self.optimize_and_find_route,
                   style='Action.TButton').pack(fill=tk.X, pady=15)
+        self.task_controls.append(optimize_button)
         
         # Schedule display
         ttk.Label(left_panel, text="Optimized Schedule:", style='Header.TLabel').pack(anchor=tk.W, pady=(15, 5))
         
         # Create a frame for the schedule text with a border
-        schedule_frame = ttk.Frame(left_panel)
+        schedule_frame = ttk.Frame(left_panel, style='Main.TFrame')
         schedule_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
         
         self.schedule_text = tk.Text(schedule_frame,
@@ -367,7 +415,7 @@ class CSUFScheduleApp:
         ttk.Label(left_panel, text="Route Information:", style='Header.TLabel').pack(anchor=tk.W, pady=(15, 5))
         
         # Create a frame for the route info text with a border
-        route_info_frame = ttk.Frame(left_panel)
+        route_info_frame = ttk.Frame(left_panel, style='Main.TFrame')
         route_info_frame.pack(fill=tk.X, pady=(0, 15))
         
         self.route_info_text = tk.Text(route_info_frame,
@@ -379,15 +427,49 @@ class CSUFScheduleApp:
         self.route_info_text.pack(fill=tk.X)
         
         # Canvas for map display
-        self.canvas_frame = ttk.Frame(right_panel)
+        self.canvas_frame = ttk.Frame(main_frame, style='Main.TFrame')
         self.canvas_frame.pack(fill=tk.BOTH, expand=True)
         
         # Show initial map
         self.show_initial_map()
+
+    def disable_task_controls(self):
+        for widget in self.task_controls:
+            widget.configure(state='disabled')
+
+    def enable_task_controls(self):
+        for widget in self.task_controls:
+            if isinstance(widget, (tk.Button, tk.Entry, tk.Text, tk.Checkbutton, tk.Radiobutton, ttk.Button, ttk.Entry, ttk.Checkbutton, ttk.Radiobutton)):
+                widget.configure(state='normal')
+
+    def add_task(self):
+        selected_text = self.task_combobox.get()
+        if not selected_text:
+            messagebox.showinfo("Information", "Please select a task first")
+            return
+    
+        # Find the task that matches the selected text
+        selected_task = None
+        for task in tasks_list:
+            task_str = f"{task['task_name']} ({task['building_name']}, {task['time_start']}-{task['time_finish']}, {task['priority']})"
+            if task_str == selected_text:
+                selected_task = task
+                break
+        
+        if selected_task:
+            # Check if task is already selected
+            task_str = f"{selected_task['task_name']} ({selected_task['building_name']}, {selected_task['time_start']}-{selected_task['time_finish']}, {selected_task['priority']})"
+            if task_str not in self.selected_tasks_listbox.get(0, tk.END):
+                self.selected_tasks.append(selected_task)
+                self.selected_tasks_listbox.insert(tk.END, task_str)
+                # Clear the combobox selection
+                self.task_combobox.set('')
+        else:
+            messagebox.showinfo("Information", "Please select a valid task from the dropdown")
     
     def show_initial_map(self):
         # Create initial map with all buildings
-        fig, ax = plt.subplots(figsize=(6, 6))
+        fig, ax = plt.subplots(figsize=(12, 10))  # Consistent size with plot_route
         
         # Prepare data for GeoDataFrame
         names = []
@@ -407,7 +489,7 @@ class CSUFScheduleApp:
         gdf.plot(ax=ax, color='red', markersize=6)
         
         # Add building labels for important buildings
-        important_buildings = list(csuf_locations.keys())  # Include all buildings
+        important_buildings = list()  # Include all buildings
         for x, y, label in zip(gdf.geometry.x, gdf.geometry.y, gdf['name']):
             if label in important_buildings:
                 ax.text(x + 10, y + 10, label, fontsize=8, weight='bold', color='black')
@@ -449,74 +531,44 @@ class CSUFScheduleApp:
                       for t in sorted_tasks]
         self.task_combobox['values'] = task_names
     
-    def add_task(self):
-        selected_text = self.task_combobox.get()
-        if not selected_text:
-            messagebox.showinfo("Information", "Please select a task first")
-            return
-            
-        # Find the task that matches the selected text
-        selected_task = None
-        for task in tasks_list:
-            task_str = f"{task['task_name']} ({task['building_name']}, {task['time_start']}-{task['time_finish']}, {task['priority']})"
-            if task_str == selected_text:
-                selected_task = task
-                break
-        
-        if selected_task:
-            # Check if task is already selected
-            task_str = f"{selected_task['task_name']} ({selected_task['building_name']}, {selected_task['time_start']}-{selected_task['time_finish']}, {selected_task['priority']})"
-            if task_str not in self.selected_tasks_listbox.get(0, tk.END):
-                self.selected_tasks.append(selected_task)
-                self.selected_tasks_listbox.insert(tk.END, task_str)
-                # Clear the combobox selection
-                self.task_combobox.set('')
-        else:
-            messagebox.showinfo("Information", "Please select a valid task from the dropdown")
-    
     def create_new_task(self):
         # Create a new window for task creation
         task_window = tk.Toplevel(self.root)
-        task_window.title("Create New Task")
+        task_window.title("Create A New Task")
         task_window.geometry("400x350")
         task_window.configure(bg=BG_COLOR)
-        
-        # Position the window below the main window
-        x = self.root.winfo_x()
-        y = self.root.winfo_y() + self.root.winfo_height()
-        task_window.geometry(f"+{x}+{y}")
-        
+    
         # Create main frame with padding
         main_frame = ttk.Frame(task_window, style='Main.TFrame', padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
-        
+    
         # Task name
         ttk.Label(main_frame, text="Task Name:", style='Header.TLabel').grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
         task_name_entry = ttk.Entry(main_frame, width=30)
         task_name_entry.grid(row=0, column=1, padx=5, pady=5)
-        
+    
         # Building selection
         ttk.Label(main_frame, text="Building:", style='Header.TLabel').grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
         building_combobox = ttk.Combobox(main_frame, width=30)
         building_combobox['values'] = sorted(list(csuf_locations.keys()))
         building_combobox.grid(row=1, column=1, padx=5, pady=5)
-        
+    
         # Start time
         ttk.Label(main_frame, text="Start Time (HH:MM):", style='Header.TLabel').grid(row=2, column=0, sticky=tk.W, padx=5, pady=5)
         start_time_entry = ttk.Entry(main_frame, width=30)
         start_time_entry.grid(row=2, column=1, padx=5, pady=5)
-        
+    
         # End time
         ttk.Label(main_frame, text="End Time (HH:MM):", style='Header.TLabel').grid(row=3, column=0, sticky=tk.W, padx=5, pady=5)
         end_time_entry = ttk.Entry(main_frame, width=30)
         end_time_entry.grid(row=3, column=1, padx=5, pady=5)
-        
+    
         # Priority
         ttk.Label(main_frame, text="Priority:", style='Header.TLabel').grid(row=4, column=0, sticky=tk.W, padx=5, pady=5)
         priority_combobox = ttk.Combobox(main_frame, width=30)
         priority_combobox['values'] = ["HIGH", "MEDIUM", "LOW"]
         priority_combobox.grid(row=4, column=1, padx=5, pady=5)
-        
+    
         # Save button
         def save_task():
             # Validate fields
@@ -525,11 +577,11 @@ class CSUFScheduleApp:
             start_time = start_time_entry.get()
             end_time = end_time_entry.get()
             priority = priority_combobox.get()
-            
+        
             if not all([task_name, building, start_time, end_time, priority]):
                 messagebox.showerror("Error", "All fields are required")
                 return
-            
+        
             # Validate time format
             try:
                 dt.strptime(start_time, "%H:%M")
@@ -538,6 +590,11 @@ class CSUFScheduleApp:
                 messagebox.showerror("Error", "Time format should be HH:MM")
                 return
             
+            # Validate building exists
+            if building not in csuf_locations:
+                messagebox.showerror("Error", f"Building '{building}' not found in campus locations")
+                return
+        
             # Create new task
             new_task = {
                 "task_name": task_name,
@@ -546,37 +603,37 @@ class CSUFScheduleApp:
                 "time_finish": end_time,
                 "priority": priority
             }
-            
+        
             # Add to tasks list
             tasks_list.append(new_task)
-            
+        
             # Update the combobox
             self.update_task_combobox()
-            
+        
             # Add to selected tasks
             self.selected_tasks.append(new_task)
             task_str = f"{task_name} ({building}, {start_time}-{end_time}, {priority})"
             self.selected_tasks_listbox.insert(tk.END, task_str)
-            
+        
             # Save to tasks.json file
             tasks_data['tasks'] = tasks_list
             with open('tasks.json', 'w') as f:
                 json.dump(tasks_data, f, indent=2)
-            
+        
             # Close window
             task_window.destroy()
-        
+    
         ttk.Button(main_frame, 
                   text="Save Task",
                   command=save_task,
                   style='Action.TButton').grid(row=5, column=0, columnspan=2, pady=20)
-    
+
     def remove_task(self):
         selected_index = self.selected_tasks_listbox.curselection()
         if selected_index:
             self.selected_tasks.pop(selected_index[0])
             self.selected_tasks_listbox.delete(selected_index[0])
-    
+
     def clear_tasks(self):
         self.selected_tasks = []
         self.selected_tasks_listbox.delete(0, tk.END)
@@ -588,21 +645,188 @@ class CSUFScheduleApp:
             messagebox.showinfo("Information", "No tasks selected")
             return
         
-        # Optimize schedule
-        self.schedule = optimize_schedule(self.selected_tasks)
+        # Step 1: Group tasks by time slot and priority
+        task_groups = {}
+        for task in self.selected_tasks:
+            key = (task['priority'], task['time_start'], task['time_finish'])
+            if key not in task_groups:
+                task_groups[key] = []
+            task_groups[key].append(task)
+        
+        # Early pruning optimization:
+        # If there are many groups, process them in chronological order
+        # and prune combinations that are already worse than the best found
+        
+        # Sort groups by time for early pruning
+        sorted_keys = sorted(task_groups.keys(), key=lambda k: parse_time(k[1]))
+        sorted_groups = [task_groups[k] for k in sorted_keys]
+        
+        # For very large problems, limit the search space
+        MAX_COMBINATIONS = 1000  # Set a reasonable limit based on performance testing
+        total_combinations = 1
+        for group in sorted_groups:
+            total_combinations *= len(group)
+        
+        if total_combinations > MAX_COMBINATIONS:
+            # Apply heuristics for large problems
+            # For example, for each time slot, keep only the N closest buildings to previous location
+            # This is just a placeholder for the concept - implementation would depend on specific needs
+            print(f"Warning: Large search space ({total_combinations} combinations). Applying heuristics.")
+            return self.greedy_optimize_route()
+        
+        # For reasonable sized problems, use optimized branch and bound
+        return self.branch_and_bound_optimize(sorted_groups)
+
+    def branch_and_bound_optimize(self, sorted_groups):
+        """Optimized branch and bound approach for finding best schedule"""
+        min_distance = float('inf')
+        best_schedule = None
+        best_route = None
+        
+        # Helper function for recursive branching
+        def branch(current_index, current_schedule, current_location, accumulated_distance):
+            nonlocal min_distance, best_schedule, best_route
+            
+            # Base case: all groups processed
+            if current_index == len(sorted_groups):
+                # Calculate final route and distance
+                route, total_distance = find_optimal_route(self.G, current_schedule)
+                if total_distance < min_distance:
+                    min_distance = total_distance
+                    best_schedule = current_schedule.copy()
+                    best_route = route
+                return
+            
+            # Process current group
+            current_group = sorted_groups[current_index]
+            
+            # Sort tasks in this group by distance from current_location if available
+            if current_location and current_index > 0:
+                tasks_with_distance = []
+                for task in current_group:
+                    task_location = task['building_name']
+                    distance = calculate_travel_time(self.G, current_location, task_location)
+                    tasks_with_distance.append((task, distance))
+                
+                # Sort by distance (best candidates first for branch pruning)
+                sorted_tasks = [t[0] for t in sorted(tasks_with_distance, key=lambda x: x[1])]
+            else:
+                sorted_tasks = current_group
+            
+            # Try each task in the sorted group
+            for task in sorted_tasks:
+                # Calculate estimated distance increase
+                new_distance = accumulated_distance
+                if current_location:
+                    estimated_distance = calculate_travel_time(self.G, current_location, task['building_name'])
+                    new_distance += estimated_distance
+                    
+                    # Early pruning: skip this branch if already worse than best
+                    if new_distance >= min_distance:
+                        continue
+                
+                # Add task to current schedule
+                new_schedule = current_schedule + [task]
+                
+                # Recurse to next group
+                branch(current_index + 1, new_schedule, task['building_name'], new_distance)
+        
+        # Start branching from the first group with empty schedule
+        branch(0, [], None, 0)
+        
+        # Update UI with the best found solution
+        if best_schedule:
+            self.update_ui_with_solution(best_schedule, best_route, min_distance)
+            return best_schedule, best_route, min_distance
+        return [], [], 0
+
+    def greedy_optimize_route(self):
+        """Greedy approach for very large problems"""
+        # Sort all tasks by priority (high to low)
+        priority_values = {"HIGH": 3, "MEDIUM": 2, "LOW": 1}
+        sorted_tasks = sorted(self.selected_tasks, 
+                             key=lambda x: (-priority_values.get(x['priority'], 0), 
+                                           parse_time(x['time_start'])))
+        
+        schedule = []
+        current_location = None
+        
+        # Process tasks in time order
+        for time_slot in sorted(set([(t['time_start'], t['time_finish']) for t in sorted_tasks]), 
+                               key=lambda x: parse_time(x[0])):
+            
+            # Get all tasks in this time slot
+            slot_tasks = [t for t in sorted_tasks if (t['time_start'], t['time_finish']) == time_slot]
+            
+            # If no current location, pick highest priority task
+            if not current_location:
+                task = slot_tasks[0]  # Already sorted by priority
+            else:
+                # Find closest task from current location
+                min_distance = float('inf')
+                task = None
+                
+                # Group by priority
+                priority_groups = {}
+                for t in slot_tasks:
+                    p = t['priority']
+                    if p not in priority_groups:
+                        priority_groups[p] = []
+                    priority_groups[p].append(t)
+                
+                # Start with highest priority
+                for priority in sorted(priority_groups.keys(), 
+                                     key=lambda p: -priority_values.get(p, 0)):
+                    
+                    # Find closest task in this priority group
+                    for t in priority_groups[priority]:
+                        distance = calculate_travel_time(self.G, current_location, t['building_name'])
+                        if distance < min_distance:
+                            min_distance = distance
+                            task = t
+                    
+                    # If we found a task in this priority group, don't check lower priorities
+                    if task:
+                        break
+            
+            # Add selected task to schedule
+            if task:
+                schedule.append(task)
+                current_location = task['building_name']
+        
+        # Apply schedule optimization to handle any remaining time conflicts
+        optimized_schedule = optimize_schedule(schedule)
+        
+        # Calculate route and distance
+        route, total_distance = find_optimal_route(self.G, optimized_schedule)
+        
+        # Update UI
+        self.update_ui_with_solution(optimized_schedule, route, total_distance)
+        
+        return optimized_schedule, route, total_distance
+
+    def update_ui_with_solution(self, schedule, route, total_distance):
+        """Update UI with the computed solution"""
+        self.schedule = schedule
+        
+        # Clear and update selected tasks listbox
+        self.selected_tasks_listbox.delete(0, tk.END)
+        self.selected_tasks = sorted(list({task['task_name']: task for task in schedule}.values()), 
+                                  key=lambda x: parse_time(x['time_start']))
+        
+        for task in self.selected_tasks:
+            task_str = f"{task['task_name']} ({task['building_name']}, {task['time_start']}-{task['time_finish']}, {task['priority']})"
+            self.selected_tasks_listbox.insert(tk.END, task_str)
         
         # Display optimized schedule
         self.schedule_text.delete(1.0, tk.END)
         self.schedule_text.insert(tk.END, "Optimized Schedule:\n\n")
         
-        for i, task in enumerate(self.schedule, 1):
+        for i, task in enumerate(schedule, 1):
             self.schedule_text.insert(tk.END, f"{i}. {task['task_name']}\n")
             self.schedule_text.insert(tk.END, f"   Location: {task['building_name']}\n")
             self.schedule_text.insert(tk.END, f"   Time: {task['time_start']} - {task['time_finish']}\n")
             self.schedule_text.insert(tk.END, f"   Priority: {task['priority']}\n\n")
-        
-        # Find optimal route
-        route, total_distance = find_optimal_route(self.G, self.schedule)
         
         # Plot route
         fig, ax = plot_route(self.G, route, csuf_locations)
@@ -615,12 +839,66 @@ class CSUFScheduleApp:
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.pack(fill=tk.BOTH, expand=True)
         
-        # Update route information in the main window
+        # Update route information
         self.route_info_text.delete(1.0, tk.END)
         self.route_info_text.insert(tk.END, f"Route Information:\n")
-        self.route_info_text.insert(tk.END, f"Number of tasks: {len(self.schedule)}\n")
+        self.route_info_text.insert(tk.END, f"Number of tasks: {len(schedule)}\n")
         self.route_info_text.insert(tk.END, f"Number of locations: {len(route)}\n")
         self.route_info_text.insert(tk.END, f"Total distance: {total_distance/1000:.2f} km")
+
+    def perform_search(self):
+        query = self.search_entry.get().strip()
+        if not query:
+            messagebox.showinfo("Info", "Please enter a building name to search.")
+            return
+
+        # Search through buildings in csuf_locations
+        matches = []
+        for building_name in csuf_locations.keys():
+            if kmp_search(building_name, query):
+                matches.append(building_name)
+
+        if not matches:
+            messagebox.showinfo("No Matches", f"Building '{query}' is not found. Please enter an existing building!")
+            self.selected_building = None
+            return
+
+        # If found, pick the first match (or you can show choices)
+        matched_building = matches[0]
+        messagebox.showinfo("Found", f"Building '{matched_building}' is found!")
+        self.selected_building = matched_building
+
+        # Enable task-related buttons after valid building search
+        self.enable_task_controls()
+
+    def load_day_tasks(self, event=None):
+        # Clear current tasks
+        self.selected_tasks = []
+        self.selected_tasks_listbox.delete(0, tk.END)
+        self.schedule = []
+        self.schedule_text.delete(1.0, tk.END)
+        self.route_info_text.delete(1.0, tk.END)
+        
+        # Get tasks for selected day
+        selected_day = self.selected_day.get()
+        if selected_day in weekly_schedule:
+            day_tasks = weekly_schedule[selected_day]
+            
+            # Add each task to the selected tasks list
+            for task in day_tasks:
+                # Verify the building exists in csuf_locations
+                if task['building_name'] in csuf_locations:
+                    self.selected_tasks.append(task)
+                    task_str = f"{task['task_name']} ({task['building_name']}, {task['time_start']}-{task['time_finish']}, {task['priority']})"
+                    self.selected_tasks_listbox.insert(tk.END, task_str)
+                else:
+                    messagebox.showwarning("Warning", f"Building '{task['building_name']}' not found in campus locations. Task '{task['task_name']}' will be skipped.")
+            
+            # Enable task controls after loading tasks
+            self.enable_task_controls()
+            
+            # Show initial map
+            self.show_initial_map()
 
 # Main function
 if __name__ == "__main__":

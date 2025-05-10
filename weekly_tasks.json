@@ -1,0 +1,340 @@
+{
+    "weekly_schedule": {
+      "Monday": [
+        {
+          "task_name": "CPSC 439 - Theory of Computation",
+          "building_name": "University Police",
+          "time_start": "08:00",
+          "time_finish": "09:15",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 464 - Software Architecture",
+          "building_name": "Clayes Performing Arts Center",
+          "time_start": "09:30",
+          "time_finish": "10:45",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 462 - Software Design",
+          "building_name": "Education Classroom",
+          "time_start": "11:00",
+          "time_finish": "12:15",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Lunch Break",
+          "building_name": "Carl's Jr.",
+          "time_start": "12:30",
+          "time_finish": "13:30",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 481 - Artificial Intelligence",
+          "building_name": "Eastside Parking Structure",
+          "time_start": "14:00",
+          "time_finish": "15:15",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 431 - Database and Applications",
+          "building_name": "Kinesiology & Health Science",
+          "time_start": "15:30",
+          "time_finish": "16:45",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Workout Session",
+          "building_name": "Student Recreation Center",
+          "time_start": "17:00",
+          "time_finish": "18:30",
+          "priority": "LOW"
+        },
+        {
+          "task_name": "CPSC 352 - Cryptography",
+          "building_name": "Nutwood Parking Structure",
+          "time_start": "19:00",
+          "time_finish": "21:45",
+          "priority": "HIGH"
+        }
+      ],
+      "Tuesday": [
+        {
+          "task_name": "CPSC 386 - Introduction to Game Design",
+          "building_name": "Mihaylo Hall",
+          "time_start": "08:00",
+          "time_finish": "09:15",
+          "priority": "LOW"
+        },
+        {
+          "task_name": "CPSC 375 - Data Science and Big Data",
+          "building_name": "Mihaylo Hall",
+          "time_start": "09:30",
+          "time_finish": "10:45",
+          "priority": "LOW"
+        },
+        {
+          "task_name": "CPSC 490 - Undergraduate Seminar",
+          "building_name": "Titan Student Union",
+          "time_start": "11:00",
+          "time_finish": "12:15",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 485 - Computational Bioinformatics",
+          "building_name": "Dan Black Hall",
+          "time_start": "12:30",
+          "time_finish": "15:15",
+          "priority": "LOW"
+        },
+        {
+          "task_name": "Coffee Study Break",
+          "building_name": "Titan Student Union",
+          "time_start": "15:30",
+          "time_finish": "16:30",
+          "priority": "LOW"
+        },
+        {
+          "task_name": "CPSC 455 - Web Security",
+          "building_name": "Engineering North West",
+          "time_start": "16:45",
+          "time_finish": "19:30",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "Study Group Session",
+          "building_name": "Portola Pavilion",
+          "time_start": "19:45",
+          "time_finish": "21:45",
+          "priority": "MEDIUM"
+        }
+      ],
+      "Wednesday": [
+        {
+          "task_name": "CPSC 471 - Computer Communications",
+          "building_name": "Engineering South West",
+          "time_start": "08:30",
+          "time_finish": "09:45",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Dance with the boys",
+          "building_name": "Gordan Hall",
+          "time_start": "10:00",
+          "time_finish": "11:45",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 459 - Blockchain Technologies",
+          "building_name": "Education Classroom",
+          "time_start": "12:00",
+          "time_finish": "13:15",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Tutoring Session",
+          "building_name": "Pollack Library",
+          "time_start": "13:30",
+          "time_finish": "15:30",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 484 - Principles of Computer Graphics",
+          "building_name": "Ruby Gerontology Center",
+          "time_start": "15:45",
+          "time_finish": "17:00",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 476 - Edge AI: Principles and Practices",
+          "building_name": "Clayes Performing Arts Center",
+          "time_start": "17:15",
+          "time_finish": "20:00",
+          "priority": "HIGH"
+        }
+      ],
+      "Thursday": [
+        {
+          "task_name": "Parking Permit Renewal",
+          "building_name": "University Police",
+          "time_start": "08:30",
+          "time_finish": "09:30",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 323 - Compilers and Languages",
+          "building_name": "Eastside Parking Structure",
+          "time_start": "09:45",
+          "time_finish": "11:00",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 440 - Computer System Architecture",
+          "building_name": "State College Parking Structure",
+          "time_start": "11:15",
+          "time_finish": "12:30",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Academic Advising Appointment",
+          "building_name": "Carl's Jr.",
+          "time_start": "12:45",
+          "time_finish": "13:45",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 315 - Professional Ethics in Computing",
+          "building_name": "Humanities & Social Sciences",
+          "time_start": "14:00",
+          "time_finish": "15:15",
+          "priority": "LOW"
+        },
+        {
+          "task_name": "CPSC 463 - Software Testing",
+          "building_name": "Student Recreation Center",
+          "time_start": "15:30",
+          "time_finish": "18:15",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Guest Lecture: Cybersecurity Trends",
+          "building_name": "Portola Pavilion",
+          "time_start": "18:30",
+          "time_finish": "20:30",
+          "priority": "LOW"
+        }
+      ],
+      "Friday": [
+        {
+          "task_name": "Research Time",
+          "building_name": "Visual Arts",
+          "time_start": "08:30",
+          "time_finish": "10:30",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 335 - Algorithm Engineering",
+          "building_name": "McCarthy Hall",
+          "time_start": "10:45",
+          "time_finish": "13:30",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 456 - Network Security Fundamentals",
+          "building_name": "Dan Black Hall",
+          "time_start": "13:45",
+          "time_finish": "15:00",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 483 - Introduction to Machine Learning",
+          "building_name": "Gordan Hall",
+          "time_start": "15:15",
+          "time_finish": "16:30",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Parking Lot Larp Match",
+          "building_name": "Nutwood Parking Structure",
+          "time_start": "16:45",
+          "time_finish": "19:30",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 351 - Operating Systems Concepts",
+          "building_name": "Humanities & Social Sciences",
+          "time_start": "19:45",
+          "time_finish": "22:30",
+          "priority": "HIGH"
+        }
+      ],
+      "Saturday": [
+        {
+          "task_name": "CPSC 411 - Mobile Device Application Programming",
+          "building_name": "Visual Arts",
+          "time_start": "09:00",
+          "time_finish": "10:15",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Counseling Appointment",
+          "building_name": "Student Health and Counseling Center",
+          "time_start": "10:30",
+          "time_finish": "11:30",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 349 - Web Front-End Engineering",
+          "building_name": "Bookstore/ Titan Shops",
+          "time_start": "12:00",
+          "time_finish": "13:15",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 465 - Modern Software Deployment",
+          "building_name": "Computer Science",
+          "time_start": "13:30",
+          "time_finish": "16:15",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Group Project Meeting",
+          "building_name": "Titan House",
+          "time_start": "16:30",
+          "time_finish": "18:30",
+          "priority": "HIGH"
+        },
+        {
+          "task_name": "CPSC 491 - Senior Capstone Project",
+          "building_name": "Ruby Gerontology Center",
+          "time_start": "18:45",
+          "time_finish": "21:30",
+          "priority": "HIGH"
+        }
+      ],
+      "Sunday": [
+        {
+          "task_name": "Library Study Session",
+          "building_name": "Pollack Library",
+          "time_start": "10:00",
+          "time_finish": "12:00",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 362 - Foundations of Software Engineering",
+          "building_name": "Computer Science",
+          "time_start": "12:15",
+          "time_finish": "13:30",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Book Purchase",
+          "building_name": "Bookstore/ Titan Shops",
+          "time_start": "13:45",
+          "time_finish": "14:45",
+          "priority": "LOW"
+        },
+        {
+          "task_name": "CPSC 466 - Software Process",
+          "building_name": "Engineering South West",
+          "time_start": "15:00",
+          "time_finish": "17:45",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "Career Center Workshop",
+          "building_name": "Student Health and Counseling Center",
+          "time_start": "18:00",
+          "time_finish": "19:30",
+          "priority": "MEDIUM"
+        },
+        {
+          "task_name": "CPSC 454 - Cloud Computing and Security",
+          "building_name": "Engineering North West",
+          "time_start": "19:45",
+          "time_finish": "22:30",
+          "priority": "HIGH"
+        }
+      ]
+    }
+  }

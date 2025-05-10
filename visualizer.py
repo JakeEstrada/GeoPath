@@ -26,8 +26,23 @@ def plot_graph(G, csuf_locations, route=None):
     # Reproject to Web Mercator (meters)
     gdf = gdf.to_crs(epsg=3857)
     
+    # Add building labels for important buildings
+    important_buildings = [
+        "Titan Student Union",
+        "McCarthy Hall",
+        "Pollak Library",
+        "Engineering Building",
+        "College Park Building"
+    ]
+    
     # Plot all buildings
-    scatter = gdf.plot(ax=ax, color='gray', markersize=5)
+    # First plot non-important buildings in gray
+    non_important_mask = ~gdf['name'].isin(important_buildings)
+    gdf[non_important_mask].plot(ax=ax, color='gray', markersize=5)
+    
+    # Then plot important buildings in black
+    important_mask = gdf['name'].isin(important_buildings)
+    gdf[important_mask].plot(ax=ax, color='black', markersize=8)
     
     # Plot route if provided
     if route:
@@ -53,10 +68,36 @@ def plot_graph(G, csuf_locations, route=None):
             ax.plot([x1, x2], [y1, y2], 'b-', linewidth=2, alpha=0.7)
     
     # Add building labels for important buildings
-    important_buildings = ["Titan Student Union", "McCarthy Hall", "Pollak Library", "Engineering Building", "College Park Building"]
+    important_buildings = [
+        "Titan Student Union",
+        "McCarthy Hall",
+        "Pollak Library",
+        "Engineering Building",
+        "College Park Building"
+    ]
+    
+    # Create a dictionary to store text positions to avoid overlap
+    text_positions = {}
+    
     for x, y, label in zip(gdf.geometry.x, gdf.geometry.y, gdf['name']):
         if label in important_buildings:
-            ax.text(x + 10, y + 10, label, fontsize=8, weight='bold', color='black')
+            # Calculate offset based on building position
+            offset_x = 20
+            offset_y = 20
+            
+            # Check if this position would overlap with existing text
+            while any(abs(x + offset_x - pos_x) < 50 and abs(y + offset_y - pos_y) < 50 
+                     for pos_x, pos_y in text_positions.values()):
+                offset_x += 10
+                offset_y += 10
+            
+            # Store the position
+            text_positions[label] = (x + offset_x, y + offset_y)
+            
+            # Add the text with a white background for better visibility
+            ax.text(x + offset_x, y + offset_y, label, 
+                   fontsize=9, weight='bold', color='black',
+                   bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', pad=2))
     
     # Add map background
     ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.OpenStreetMap.Mapnik)
@@ -77,8 +118,12 @@ def plot_graph(G, csuf_locations, route=None):
     
     @cursor.connect("add")
     def on_add(sel):
-        sel.annotation.set_text(gdf.iloc[sel.index]['name'])
+        building_name = gdf.iloc[sel.index]['name']
+        if building_name in important_buildings:
+            sel.annotation.set_text(building_name)
         sel.annotation.get_bbox_patch().set(fc="yellow", alpha=0.8)
+        else:
+            sel.annotation.set_visible(False)
     
     # If there's a route, add hover functionality for route points too
     if route:
